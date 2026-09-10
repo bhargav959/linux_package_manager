@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#08101b">
+    <title>PackageHub — Linux Package Manager</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand-row">
+            <div class="brand-mark" aria-hidden="true">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="brand-copy">
+                <div class="brand-name">PackageHub</div>
+                <div class="brand-subtitle">Linux maintenance</div>
+            </div>
+        </div>
+
+        <div class="workspace-label">WORKSPACE</div>
+        <nav class="nav-list" aria-label="Primary navigation">
+            <button class="nav-item active" data-page="dashboard" title="Overview">
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label-text">Overview</span>
+            </button>
+            <button class="nav-item" data-page="packages" title="Packages">
+                <span class="nav-icon">▦</span>
+                <span class="nav-label-text">Packages</span>
+            </button>
+            <button class="nav-item" data-page="updates" title="Updates">
+                <span class="nav-icon">↑</span>
+                <span class="nav-label-text">Updates</span>
+                <span class="nav-badge" id="navUpdateCount">0</span>
+            </button>
+            <button class="nav-item" data-page="history" title="Recent updates">
+                <span class="nav-icon">◷</span>
+                <span class="nav-label-text">History</span>
+            </button>
+            <button class="nav-item" data-page="maintenance" title="Maintenance">
+                <span class="nav-icon">✦</span>
+                <span class="nav-label-text">Maintenance</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="host-status">
+                <span class="status-dot"></span>
+                <div class="host-status-copy">
+                    <strong>System online</strong>
+                    <small id="sidebarHost">Detecting host…</small>
+                </div>
+            </div>
+            <button class="collapse-button" id="sidebarCollapse" type="button" title="Collapse navigation">
+                <span class="collapse-arrow">‹</span>
+                <span class="collapse-text">Collapse</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="title-block">
+                <div class="eyebrow">LINUX PACKAGE CENTER</div>
+                <h1 id="pageTitle">Overview</h1>
+                <p id="host">Loading system information…</p>
+            </div>
+            <div class="top-actions">
+                <button class="button secondary" id="refreshIndexes" type="button">
+                    <span>↻</span> Refresh indexes
+                </button>
+                <button class="button primary" id="updateAll" type="button">
+                    <span>↑</span> Update all
+                </button>
+            </div>
+        </header>
+
+        <section class="page active" id="dashboard">
+            <div class="hero-panel">
+                <div>
+                    <span class="hero-kicker">SYSTEM OVERVIEW</span>
+                    <h2>Package health at a glance.</h2>
+                    <p>Keep applications, updates and package managers under control from one local interface.</p>
+                </div>
+                <div class="hero-status" title="Local package service">
+                    <div class="hero-ring"></div>
+                    <div class="hero-check">✓</div>
+                </div>
+            </div>
+
+            <div class="metric-grid" id="summary"></div>
+
+            <div class="dashboard-grid">
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <span class="panel-kicker">PACKAGE SOURCES</span>
+                            <h3>Package managers</h3>
+                        </div>
+                        <span class="live-pill"><span></span>Local</span>
+                    </div>
+                    <div id="managers" class="manager-grid"></div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <span class="panel-kicker">AVAILABLE NOW</span>
+                            <h3>Stable updates</h3>
+                        </div>
+                        <button class="link-button" data-go="updates" type="button">View all →</button>
+                    </div>
+                    <div id="dashboardUpdates" class="mini-list"></div>
+                </section>
+            </div>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <span class="panel-kicker">RECENT ACTIVITY</span>
+                        <h3>Recently updated</h3>
+                    </div>
+                    <button class="link-button" data-go="history" type="button">View history →</button>
+                </div>
+                <div id="dashboardHistory" class="activity-list"></div>
+            </section>
+        </section>
+
+        <section class="page" id="packages">
+            <div class="page-header-row">
+                <div>
+                    <div class="panel-kicker">PACKAGE INVENTORY</div>
+                    <h2>Installed packages</h2>
+                    <p>Search, inspect and update software installed on this host.</p>
+                </div>
+                <div class="page-header-stat">
+                    <strong id="packageCount">0</strong>
+                    <span>visible packages</span>
+                </div>
+            </div>
+
+            <div class="control-bar">
+                <div class="search-input-wrap">
+                    <span class="search-symbol">⌕</span>
+                    <input id="search" type="search" placeholder="Search packages…" autocomplete="off">
+                </div>
+                <select class="select" id="managerFilter" aria-label="Package manager">
+                    <option value="">All managers</option>
+                    <option value="apt">APT</option>
+                    <option value="snap">Snap</option>
+                    <option value="flatpak">Flatpak</option>
+                </select>
+                <label class="check-toggle">
+                    <input type="checkbox" id="hideSystem">
+                    <span class="toggle-ui"></span>
+                    <span>Hide system packages</span>
+                </label>
+                <button class="button secondary compact" id="refreshPackageTable" type="button">↻ Refresh</button>
+            </div>
+
+            <section class="panel package-panel">
+                <div class="table-caption">
+                    <strong id="packageTableCaption">Packages</strong>
+                    <span>Click a row for package details</span>
+                </div>
+                <div id="packageTable" class="package-table"></div>
+            </section>
+        </section>
+
+        <section class="page" id="updates">
+            <div class="page-header-row">
+                <div>
+                    <div class="panel-kicker">UPDATE CENTER</div>
+                    <h2>Stable updates</h2>
+                    <p>Only currently offered stable candidates appear here.</p>
+                </div>
+                <div class="page-header-stat">
+                    <strong id="updateCount">0</strong>
+                    <span>available</span>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-symbol">i</div>
+                <div>
+                    <strong>Stable candidates only</strong>
+                    <p>Phased, held-back and otherwise unavailable packages are not shown as normal update actions.</p>
+                </div>
+            </div>
+
+            <section class="panel package-panel">
+                <div id="updatesTable" class="package-table"></div>
+            </section>
+        </section>
+
+        <section class="page" id="history">
+            <div class="page-header-row">
+                <div>
+                    <div class="panel-kicker">AUDIT TRAIL</div>
+                    <h2>Recent updates</h2>
+                    <p>Successful update operations recorded by PackageHub.</p>
+                </div>
+            </div>
+            <section class="panel">
+                <div id="historyList" class="activity-list history-list"></div>
+            </section>
+        </section>
+
+        <section class="page" id="maintenance">
+            <div class="page-header-row">
+                <div>
+                    <div class="panel-kicker">SYSTEM CARE</div>
+                    <h2>Maintenance</h2>
+                    <p>Clean and update the package ecosystem without leaving the interface.</p>
+                </div>
+            </div>
+
+            <div class="maintenance-grid">
+                <article class="maintenance-card">
+                    <div class="maintenance-icon apt">A</div>
+                    <div>
+                        <span class="maintenance-label">APT</span>
+                        <h3>Remove unused packages</h3>
+                        <p>Run APT autoremove with administrator privileges.</p>
+                        <button class="button secondary" data-maintenance="apt-autoremove" type="button">Run autoremove</button>
+                    </div>
+                </article>
+                <article class="maintenance-card">
+                    <div class="maintenance-icon flatpak">F</div>
+                    <div>
+                        <span class="maintenance-label">FLATPAK</span>
+                        <h3>Clean unused runtimes</h3>
+                        <p>Remove Flatpak runtimes that are no longer required.</p>
+                        <button class="button secondary" data-maintenance="flatpak-unused" type="button">Clean runtimes</button>
+                    </div>
+                </article>
+                <article class="maintenance-card featured">
+                    <div class="maintenance-icon all">↑</div>
+                    <div>
+                        <span class="maintenance-label">ALL SUPPORTED</span>
+                        <h3>Update everything</h3>
+                        <p>Run stable updates across supported package managers.</p>
+                        <button class="button primary" data-maintenance="update-all" type="button">Update all</button>
+                    </div>
+                </article>
+            </div>
+
+            <section class="panel terminal-panel">
+                <div class="panel-header">
+                    <div>
+                        <span class="panel-kicker">OPERATION OUTPUT</span>
+                        <h3>Activity log</h3>
+                    </div>
+                    <span class="terminal-ready"><span></span>Ready</span>
+                </div>
+                <pre id="log">No operation has been run.</pre>
+            </section>
+        </section>
+    </main>
+</div>
+
+<!-- Package details -->
+<div class="drawer" id="drawer" hidden>
+    <div class="drawer-backdrop" data-close-drawer></div>
+    <aside class="details-drawer" aria-label="Package details">
+        <div class="details-header">
+            <div>
+                <span class="panel-kicker">PACKAGE DETAILS</span>
+                <h2 id="detailName">Package</h2>
+            </div>
+            <button class="close-button" id="closeDrawer" type="button" aria-label="Close details">×</button>
+        </div>
+        <div id="detailBody" class="detail-body"></div>
+    </aside>
+</div>
+
+<!-- Confirm -->
+<div class="modal" id="confirmModal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <div class="modal-icon">!</div>
+        <h3 id="confirmTitle">Confirm operation</h3>
+        <p id="confirmMessage"></p>
+        <div class="modal-actions">
+            <button class="button secondary" id="confirmCancel" type="button">Cancel</button>
+            <button class="button primary" id="confirmProceed" type="button">Continue</button>
+        </div>
+    </div>
+</div>
+
+<!-- Sudo Authentication Prompt -->
+<div class="modal" id="sudoAuthModal" hidden>
+    <div class="modal-backdrop" data-close-sudo-modal></div>
+    <div class="modal-card auth-modal" role="dialog" aria-modal="true" aria-labelledby="sudoAuthTitle">
+        <div class="modal-icon auth-icon">🔒</div>
+        <h3 id="sudoAuthTitle">Authentication Required</h3>
+        <p id="sudoAuthMessage">Administrator (sudo) privileges are required for this operation. Please enter your password.</p>
+        <form id="sudoAuthForm" onsubmit="return false;">
+            <div class="form-group">
+                <input type="password" id="sudoPasswordInput" class="input-text" placeholder="Enter sudo password…" autocomplete="current-password" required>
+            </div>
+            <div id="sudoAuthError" class="auth-error-msg" hidden></div>
+            <div class="modal-actions">
+                <button class="button secondary" id="sudoAuthCancel" type="button">Cancel</button>
+                <button class="button primary" id="sudoAuthSubmit" type="submit">Authenticate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
